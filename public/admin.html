@@ -418,6 +418,21 @@
         <label>رابط الصورة</label>
         <input id="pImg" type="url" placeholder="https://...">
       </div>
+      <div class="two-col">
+        <div class="f-group">
+          <label>شارة المنتج</label>
+          <select id="pBadge" onchange="document.getElementById('discountGroup').style.display=this.value==='sale'?'flex':'none'">
+            <option value="">— لا شيء —</option>
+            <option value="best_seller">🔥 الأكثر مبيعاً</option>
+            <option value="new">✨ جديد</option>
+            <option value="sale">🏷️ خصم</option>
+          </select>
+        </div>
+        <div class="f-group" id="discountGroup" style="display:none">
+          <label>نسبة الخصم %</label>
+          <input id="pDiscount" type="number" min="1" max="99" placeholder="مثال: 20">
+        </div>
+      </div>
       <div class="f-group">
         <div class="toggle-wrap">
           <input type="checkbox" id="pAvail" checked>
@@ -650,6 +665,9 @@
       document.getElementById('pCat').value=p.category_id||'';
       document.getElementById('pImg').value=p.image_url||'';
       document.getElementById('pAvail').checked=p.is_available;
+      document.getElementById('pBadge').value = p.badge || '';
+      document.getElementById('discountGroup').style.display = p.badge === 'sale' ? 'flex' : 'none';
+      document.getElementById('pDiscount').value = p.discount || '';
     } else {
       document.getElementById('pId').value='';
       document.getElementById('pName').value='';
@@ -659,6 +677,9 @@
       document.getElementById('pCat').value='';
       document.getElementById('pImg').value='';
       document.getElementById('pAvail').checked=true;
+      document.getElementById('pBadge').value = '';
+      document.getElementById('discountGroup').style.display = 'none';
+      document.getElementById('pDiscount').value = '';
     }
     document.getElementById('prodModal').classList.add('open');
   }
@@ -672,7 +693,9 @@
       stock:parseInt(document.getElementById('pStock').value)||0,
       category_id:document.getElementById('pCat').value||null,
       image_url:document.getElementById('pImg').value.trim()||null,
-      is_available:document.getElementById('pAvail').checked
+      is_available:document.getElementById('pAvail').checked,
+      badge: document.getElementById('pBadge').value || null,
+      discount: document.getElementById('pBadge').value === 'sale' ? (parseFloat(document.getElementById('pDiscount').value)||null) : null,
     };
     if(!body.name){ toast('اسم المنتج مطلوب','err'); return; }
     const url=id?`/api/products?id=${id}`:'/api/products';

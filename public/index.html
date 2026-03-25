@@ -212,6 +212,21 @@
     .card-oos-tag { font-size:11px; color:#c62828; background:#ffebee;
       border-radius:50px; padding:3px 10px; font-weight:600; }
 
+    /* Badge overlay on card */
+    .card-badge { position:absolute; top:10px; right:10px; z-index:2; padding:4px 10px; border-radius:50px; font-size:11px; font-weight:700; }
+    .badge-best  { background:var(--rose); color:#fff; }
+    .badge-new   { background:var(--text); color:#fff; }
+    .badge-sale  { background:#16a34a; color:#fff; }
+
+    /* Stock */
+    .stock-out { font-size:11px; color:#dc2626; font-weight:600; }
+    .stock-low { font-size:11px; color:#d97706; font-weight:600; }
+    .stock-ok  { font-size:11px; color:#16a34a; font-weight:600; }
+
+    /* Discount price */
+    .price-old { text-decoration:line-through; color:var(--muted); font-size:12px; margin-left:6px; }
+    .price-new { color:#16a34a; font-weight:800; }
+
     /* Empty / Loading */
     .loading { display:flex; justify-content:center; padding:80px; grid-column:1/-1; }
     .spin { width:36px; height:36px; border:3px solid var(--blush);
@@ -611,25 +626,40 @@
   function render(list){
     const g=document.getElementById('pGrid');
     if(!list.length){g.innerHTML='<div class="empty-state"><p>لا توجد منتجات بعد</p></div>';return;}
-    g.innerHTML=list.map(p=>`
+    g.innerHTML=list.map(p=>{
+      const badgeMap = {best_seller:'badge-best', new:'badge-new', sale:'badge-sale'};
+      const badgeLabel = {best_seller:'🔥 الأكثر مبيعاً', new:'✨ جديد', sale:`🏷️ خصم ${p.discount}%`};
+      const badgeHtml = p.badge ? `<span class="card-badge ${badgeMap[p.badge]||''}">${badgeLabel[p.badge]||''}</span>` : '';
+      const stockHtml = p.stock===0
+        ? '<span class="stock-out">نفذ من المخزون</span>'
+        : p.stock<=5
+          ? `<span class="stock-low">آخر ${p.stock} قطع</span>`
+          : '<span class="stock-ok">متوفر</span>';
+      const priceHtml = p.discount
+        ? `<span class="price-old">${p.price} ₪</span><span class="price-new">${(p.price*(1-p.discount/100)).toFixed(2)} ₪</span>`
+        : `<div class="card-price">${p.price} ₪</div>`;
+      const addBtn = p.stock>0
+        ? `<button class="card-ov-btn" onclick="event.stopPropagation();addToCart(${p.id})">أضف للسلة</button>`
+        : `<span class="card-ov-oos">نفذ المخزون</span>`;
+      return `
       <div class="card" onclick="openProd(${p.id})">
         <div class="card-img-wrap">
           ${p.image_url?`<img src="${p.image_url}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:' 🌸'}
+          ${badgeHtml}
           <div class="card-overlay">
-            ${p.stock>0
-              ?`<button class="card-ov-btn" onclick="event.stopPropagation();addToCart(${p.id})">أضف للسلة</button>`
-              :`<span class="card-ov-oos">نفذ المخزون</span>`}
+            ${addBtn}
           </div>
         </div>
         <div class="card-body">
           <div class="card-cat">${esc(p.categories?.name||'')}</div>
           <div class="card-name">${esc(p.name)}</div>
+          <div style="margin-bottom:6px">${stockHtml}</div>
           <div class="card-foot">
-            <div class="card-price">${p.price} ₪</div>
-            ${p.stock<=0?'<span class="card-oos-tag">نفذ</span>':''}
+            ${priceHtml}
           </div>
         </div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
   }
 
   function openProd(id){

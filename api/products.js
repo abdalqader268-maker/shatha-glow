@@ -22,10 +22,10 @@ export default async function handler(req, res) {
   if (!await requireAdmin(req, res, db)) return;
 
   if (req.method === 'POST') {
-    const { name, description, price, image_url, category_id, stock, is_available } = req.body;
+    const { name, description, price, image_url, category_id, stock, is_available, badge, discount } = req.body;
     const { data, error } = await db
       .from('products')
-      .insert([{ name, description, price, image_url, category_id: category_id || null, stock: stock || 0, is_available: is_available !== false }])
+      .insert([{ name, description, price, image_url, category_id: category_id || null, stock: stock || 0, is_available: is_available !== false, badge: badge || null, discount: discount || null }])
       .select('*, categories(name)')
       .single();
     if (error) return res.status(500).json({ error: error.message });
