@@ -365,19 +365,6 @@
         <button class="btn-pink btn-sm" onclick="savePass()">حفظ</button>
       </div>
 
-      <div class="setting-card">
-        <h4>📱 إعدادات تيليغرام</h4>
-        <div class="f-group">
-          <label>Bot Token</label>
-          <input type="text" id="tgToken" placeholder="BOT_TOKEN">
-        </div>
-        <div class="f-group">
-          <label>Chat ID</label>
-          <input type="text" id="tgChatId" placeholder="CHAT_ID">
-        </div>
-        <button class="btn-pink btn-sm" onclick="saveTelegram()">حفظ</button>
-        <p style="font-size:12px;color:var(--soft);margin-top:8px">⚠️ الـ Token والـ Chat ID يُحفظان في متغيرات Vercel، مش هنا مباشرة.</p>
-      </div>
     </div>
 
   </div><!-- /content -->
@@ -814,7 +801,7 @@
   }
 
   function saveTelegram(){
-    toast('حفظ الـ Telegram من متغيرات Vercel: TELEGRAM_BOT_TOKEN و TELEGRAM_CHAT_ID','ok');
+    // removed
   }
 
   // ── Tabs ──
