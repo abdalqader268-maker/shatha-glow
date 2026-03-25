@@ -6,6 +6,13 @@ export default async function handler(req, res) {
 
   const db = sb();
 
+  if (req.method === 'GET' && req.query.phone) {
+    const phone = req.query.phone.replace(/\D/g,'');
+    const { data, error } = await db.from('orders').select('id,status,total,items,created_at,customer_name').order('created_at',{ascending:false}).ilike('phone', `%${phone}%`);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(200).json(data);
+  }
+
   if (req.method === 'POST') {
     const { customer_name, phone, city, address, items, total, notes } = req.body;
 

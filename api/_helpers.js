@@ -9,11 +9,11 @@ export const cors = (res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization');
 };
 
-export const requireAdmin = async (req, res, db) => {
+export const requireAdmin = async (req, res, db, soft = false) => {
   const token = req.headers.authorization?.replace('Bearer ', '');
-  if (!token) { res.status(401).json({ error: 'غير مصرح' }); return false; }
+  if (!token) { if (!soft) res.status(401).json({ error: 'غير مصرح' }); return false; }
   const { data } = await db.from('settings').select('value').eq('key', 'admin_token').single();
-  if (!data || data.value !== token) { res.status(401).json({ error: 'غير مصرح' }); return false; }
+  if (!data || data.value !== token) { if (!soft) res.status(401).json({ error: 'غير مصرح' }); return false; }
   return true;
 };
 

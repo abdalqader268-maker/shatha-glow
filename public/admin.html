@@ -314,6 +314,47 @@
       <h3 style="margin-bottom:16px">⚙️ الإعدادات</h3>
 
       <div class="setting-card">
+        <h4>🖼️ محتوى الصفحة الرئيسية</h4>
+        <div class="two-col">
+          <div class="f-group">
+            <label>العنوان السطر الأول</label>
+            <input type="text" id="cHeroTitle1" placeholder="جمالك يبدأ">
+          </div>
+          <div class="f-group">
+            <label>العنوان السطر الثاني (ملوّن)</label>
+            <input type="text" id="cHeroTitle2" placeholder="من هنا">
+          </div>
+        </div>
+        <div class="f-group">
+          <label>الشارة (النص الصغير فوق العنوان)</label>
+          <input type="text" id="cHeroTag" placeholder="✨ منتجات أصلية مختارة">
+        </div>
+        <div class="f-group">
+          <label>النص التعريفي</label>
+          <input type="text" id="cHeroDesc" placeholder="منتجات عناية بالبشرة أصلية...">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+          <div>
+            <div class="f-group"><label>إحصاء 1 — رقم</label><input type="text" id="cStat1N" placeholder="١٠٠٪"></div>
+            <div class="f-group"><label>إحصاء 1 — نص</label><input type="text" id="cStat1L" placeholder="منتجات أصلية"></div>
+          </div>
+          <div>
+            <div class="f-group"><label>إحصاء 2 — رقم</label><input type="text" id="cStat2N" placeholder="+٥٠٠"></div>
+            <div class="f-group"><label>إحصاء 2 — نص</label><input type="text" id="cStat2L" placeholder="عميلة سعيدة"></div>
+          </div>
+          <div>
+            <div class="f-group"><label>إحصاء 3 — رقم</label><input type="text" id="cStat3N" placeholder="يومين"></div>
+            <div class="f-group"><label>إحصاء 3 — نص</label><input type="text" id="cStat3L" placeholder="وقت التوصيل"></div>
+          </div>
+        </div>
+        <div class="f-group">
+          <label>رقم واتساب (بدون + مثال: 972594660164)</label>
+          <input type="text" id="cWaNumber" placeholder="972594660164">
+        </div>
+        <button class="btn-pink btn-sm" onclick="saveContent()">💾 حفظ المحتوى</button>
+      </div>
+
+      <div class="setting-card">
         <h4>🔒 تغيير كلمة المرور</h4>
         <div class="f-group">
           <label>كلمة المرور الجديدة</label>
@@ -432,8 +473,47 @@
 
   // ── Load All ──
   async function loadAll(){
-    await Promise.all([loadOrders(), loadProds(), loadCats()]);
+    await Promise.all([loadOrders(), loadProds(), loadCats(), loadContentSettings()]);
     updateStats();
+  }
+
+  async function loadContentSettings(){
+    try {
+      const list = await (await fetch('/api/settings', {headers: auth()})).json();
+      const s = {};
+      list.forEach(r => s[r.key] = r.value);
+      const fill = (id, val) => { if(val !== undefined && document.getElementById(id)) document.getElementById(id).value = val; };
+      fill('cHeroTag',    s.hero_tag);
+      fill('cHeroTitle1', s.hero_title1);
+      fill('cHeroTitle2', s.hero_title2);
+      fill('cHeroDesc',   s.hero_desc);
+      fill('cStat1N', s.stat1_n); fill('cStat1L', s.stat1_l);
+      fill('cStat2N', s.stat2_n); fill('cStat2L', s.stat2_l);
+      fill('cStat3N', s.stat3_n); fill('cStat3L', s.stat3_l);
+      fill('cWaNumber', s.wa_number);
+    } catch(e){}
+  }
+
+  async function saveContent(){
+    const fields = {
+      hero_tag:    document.getElementById('cHeroTag').value.trim(),
+      hero_title1: document.getElementById('cHeroTitle1').value.trim(),
+      hero_title2: document.getElementById('cHeroTitle2').value.trim(),
+      hero_desc:   document.getElementById('cHeroDesc').value.trim(),
+      stat1_n: document.getElementById('cStat1N').value.trim(),
+      stat1_l: document.getElementById('cStat1L').value.trim(),
+      stat2_n: document.getElementById('cStat2N').value.trim(),
+      stat2_l: document.getElementById('cStat2L').value.trim(),
+      stat3_n: document.getElementById('cStat3N').value.trim(),
+      stat3_l: document.getElementById('cStat3L').value.trim(),
+      wa_number: document.getElementById('cWaNumber').value.trim(),
+    };
+    try {
+      await Promise.all(Object.entries(fields).filter(([,v])=>v).map(([key,value]) =>
+        fetch('/api/settings', {method:'PUT', headers:{...auth(),'Content-Type':'application/json'}, body:JSON.stringify({key, value})})
+      ));
+      toast('تم الحفظ ✓', 'ok');
+    } catch(e){ toast('حدث خطأ', 'err'); }
   }
 
   function updateStats(){

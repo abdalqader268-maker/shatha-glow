@@ -6,13 +6,20 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const db = sb();
-  if (!await requireAdmin(req, res, db)) return;
+
+  const PRIVATE_KEYS = ['admin_token', 'admin_password'];
 
   if (req.method === 'GET') {
+    const isAdmin = await requireAdmin(req, res, db, true);
     const { data, error } = await db.from('settings').select('*');
     if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json(data.filter(s => s.key !== 'admin_token'));
+    const filtered = isAdmin
+      ? data.filter(s => s.key !== 'admin_token')
+      : data.filter(s => !PRIVATE_KEYS.includes(s.key));
+    return res.status(200).json(filtered);
   }
+
+  if (!await requireAdmin(req, res, db)) return;
 
   if (req.method === 'PUT') {
     const { key, value } = req.body;
