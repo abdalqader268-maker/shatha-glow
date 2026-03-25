@@ -538,8 +538,12 @@
 
   // ── Orders ──
   async function loadOrders(){
-    const r = await fetch('/api/orders',{headers:auth()});
-    allOrders = await r.json();
+    try {
+      const r = await fetch('/api/orders',{headers:auth()});
+      const data = await r.json();
+      if(!r.ok){ toast('خطأ في تحميل الطلبات: '+(data.error||r.status),'err'); return; }
+      allOrders = Array.isArray(data) ? data : [];
+    } catch(e){ toast('تعذّر الاتصال بالخادم','err'); }
     renderOrders();
   }
 
