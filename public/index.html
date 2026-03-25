@@ -481,7 +481,7 @@
 <!-- ── FOOTER ── -->
 <footer>
   <p><strong>🌸 Shatha Glow Store</strong> — جميع الحقوق محفوظة 2025</p>
-  <p style="margin-top:8px">واتساب: <a href="https://wa.me/972594660164">+972-59-466-0164</a></p>
+  <p style="margin-top:8px">واتساب: <a href="https://wa.me/972594660164" id="waFooterBtn">+972-59-466-0164</a></p>
 </footer>
 
 <!-- ── CART DRAWER ── -->
@@ -593,8 +593,11 @@
       set('stat3N', s.stat3_n); set('stat3L', s.stat3_l);
       if(s.wa_number){
         const num = s.wa_number.replace(/\D/g,'');
-        document.querySelectorAll('#waNavBtn').forEach(el => el.href = `https://wa.me/${num}`);
         waNumber = num;
+        const waUrl = `https://wa.me/${num}`;
+        document.getElementById('waNavBtn').href = waUrl;
+        const footer = document.getElementById('waFooterBtn');
+        if(footer){ footer.href = waUrl; footer.textContent = '+'+num; }
       }
     }catch(e){}
   }
