@@ -187,6 +187,8 @@
     .f-group textarea{height:76px;resize:none;}
     .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
     .toggle-wrap{display:flex;align-items:center;gap:10px;}
+    .img-upload-wrap{cursor:pointer;}
+    .img-upload-wrap:hover #imgPlaceholder{border-color:var(--pink);color:var(--pink);}
     input[type=checkbox]{width:18px;height:18px;accent-color:var(--pink);}
 
     /* Settings */
@@ -415,8 +417,15 @@
         </select>
       </div>
       <div class="f-group">
-        <label>رابط الصورة</label>
-        <input id="pImg" type="url" placeholder="https://...">
+        <label>الصورة</label>
+        <div class="img-upload-wrap" onclick="document.getElementById('imgFile').click()">
+          <img id="imgPreview" src="" alt="" style="display:none;width:100%;height:140px;object-fit:cover;border-radius:10px;margin-bottom:8px">
+          <div id="imgPlaceholder" style="text-align:center;padding:28px;color:var(--soft);border:2px dashed var(--line);border-radius:10px;cursor:pointer">
+            📷 اضغط لرفع صورة
+          </div>
+          <input type="file" id="imgFile" accept="image/*" style="display:none" onchange="previewImg(this)">
+        </div>
+        <input id="pImg" type="hidden">
       </div>
       <div class="two-col">
         <div class="f-group">
@@ -668,6 +677,9 @@
       document.getElementById('pBadge').value = p.badge || '';
       document.getElementById('discountGroup').style.display = p.badge === 'sale' ? 'flex' : 'none';
       document.getElementById('pDiscount').value = p.discount || '';
+      document.getElementById('imgFile').value='';
+      if(p.image_url){ document.getElementById('imgPreview').src=p.image_url; document.getElementById('imgPreview').style.display='block'; document.getElementById('imgPlaceholder').style.display='none'; }
+      else { document.getElementById('imgPreview').style.display='none'; document.getElementById('imgPlaceholder').style.display='block'; }
     } else {
       document.getElementById('pId').value='';
       document.getElementById('pName').value='';
@@ -680,8 +692,43 @@
       document.getElementById('pBadge').value = '';
       document.getElementById('discountGroup').style.display = 'none';
       document.getElementById('pDiscount').value = '';
+      document.getElementById('imgFile').value='';
+      document.getElementById('imgPreview').style.display='none';
+      document.getElementById('imgPlaceholder').style.display='block';
     }
     document.getElementById('prodModal').classList.add('open');
+  }
+
+  function previewImg(input){
+    const file = input.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('imgPreview').src = e.target.result;
+      document.getElementById('imgPreview').style.display = 'block';
+      document.getElementById('imgPlaceholder').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function uploadImgIfNeeded(){
+    const file = document.getElementById('imgFile').files[0];
+    if(!file) return document.getElementById('pImg').value || null;
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async e => {
+        const base64 = e.target.result.split(',')[1];
+        const r = await fetch('/api/upload', {
+          method:'POST',
+          headers:{...auth(),'Content-Type':'application/json'},
+          body: JSON.stringify({ base64, filename: file.name, mime: file.type })
+        });
+        if(!r.ok){ reject('فشل رفع الصورة'); return; }
+        const { url } = await r.json();
+        resolve(url);
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   async function saveProd(){
@@ -698,6 +745,9 @@
       discount: document.getElementById('pBadge').value === 'sale' ? (parseFloat(document.getElementById('pDiscount').value)||null) : null,
     };
     if(!body.name){ toast('اسم المنتج مطلوب','err'); return; }
+    try {
+      body.image_url = await uploadImgIfNeeded();
+    } catch(e){ toast(e,'err'); return; }
     const url=id?`/api/products?id=${id}`:'/api/products';
     const method=id?'PUT':'POST';
     const r=await fetch(url,{method,headers:{...auth(),'Content-Type':'application/json'},body:JSON.stringify(body)});
