@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "shatha-glow",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "public", "-p", "3100", "--no-clipboard"],
+      "port": 3100
+    }
+  ]
+}
