@@ -253,6 +253,7 @@
       <div class="stat-card"><div class="stat-label">إجمالي الطلبات</div><div class="stat-num" id="sTotal">-</div></div>
       <div class="stat-card"><div class="stat-label">المنتجات</div><div class="stat-num" id="sProds">-</div></div>
       <div class="stat-card"><div class="stat-label">التصنيفات</div><div class="stat-num" id="sCats">-</div></div>
+      <div class="stat-card"><div class="stat-label">زوار الموقع</div><div class="stat-num" id="sVisitors">-</div></div>
     </div>
 
     <!-- Orders Tab -->
@@ -484,8 +485,15 @@
 
   // ── Load All ──
   async function loadAll(){
-    await Promise.all([loadOrders(), loadProds(), loadCats(), loadContentSettings()]);
+    await Promise.all([loadOrders(), loadProds(), loadCats(), loadContentSettings(), loadVisitors()]);
     updateStats();
+  }
+
+  async function loadVisitors(){
+    try {
+      const r = await (await fetch('/api/visitors', { headers: auth() })).json();
+      document.getElementById('sVisitors').textContent = r.count ?? '-';
+    } catch(e) {}
   }
 
   async function loadContentSettings(){

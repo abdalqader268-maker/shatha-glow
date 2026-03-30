@@ -400,6 +400,7 @@
       .two { grid-template-columns:1fr; }
     }
   </style>
+  <script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 
@@ -553,6 +554,7 @@
   let products=[], cart=JSON.parse(localStorage.getItem('sg2')||'[]'), curProd=null, waNumber='972594660164';
 
   async function init(){
+    fetch('/api/visitors', { method: 'POST' }).catch(() => {});
     await Promise.all([loadSettings(), loadCats(), loadProds()]);
     renderCart();
   }
