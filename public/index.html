@@ -554,7 +554,9 @@
   let products=[], cart=JSON.parse(localStorage.getItem('sg2')||'[]'), curProd=null, waNumber='972594660164';
 
   async function init(){
-    fetch('/api/visitors', { method: 'POST' }).catch(() => {});
+    const newVisitor = !localStorage.getItem('_sg_visited');
+    if (newVisitor) localStorage.setItem('_sg_visited', '1');
+    fetch('/api/visitors', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ newVisitor }) }).catch(() => {});
     await Promise.all([loadSettings(), loadCats(), loadProds()]);
     renderCart();
   }

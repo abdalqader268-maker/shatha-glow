@@ -6,19 +6,38 @@ export default async function handler(req, res) {
 
   const db = sb();
 
-  // POST — تسجيل زيارة جديدة
+  // POST — تسجيل زيارة (newVisitor: true إذا كان شخص جديد)
   if (req.method === 'POST') {
-    const { data } = await db.from('settings').select('value').eq('key', 'visitor_count').single();
-    const current = parseInt(data?.value || '0', 10);
-    await db.from('settings').upsert({ key: 'visitor_count', value: String(current + 1) });
+    const { newVisitor } = req.body || {};
+
+    const keys = ['visit_count'];
+    if (newVisitor) keys.push('visitor_count');
+
+    const { data: rows } = await db.from('settings').select('key,value').in('key', keys);
+    const map = {};
+    (rows || []).forEach(r => map[r.key] = parseInt(r.value || '0', 10));
+
+    const upserts = [
+      { key: 'visit_count',   value: String((map['visit_count']   || 0) + 1) },
+    ];
+    if (newVisitor) {
+      upserts.push({ key: 'visitor_count', value: String((map['visitor_count'] || 0) + 1) });
+    }
+
+    await db.from('settings').upsert(upserts);
     return res.status(200).json({ ok: true });
   }
 
-  // GET — إرجاع العدد (للأدمن فقط)
+  // GET — إرجاع العددين (للأدمن فقط)
   if (req.method === 'GET') {
     if (!await requireAdmin(req, res, db)) return;
-    const { data } = await db.from('settings').select('value').eq('key', 'visitor_count').single();
-    return res.status(200).json({ count: parseInt(data?.value || '0', 10) });
+    const { data: rows } = await db.from('settings').select('key,value').in('key', ['visit_count', 'visitor_count']);
+    const map = {};
+    (rows || []).forEach(r => map[r.key] = parseInt(r.value || '0', 10));
+    return res.status(200).json({
+      visits:   map['visit_count']   || 0,
+      visitors: map['visitor_count'] || 0,
+    });
   }
 
   res.status(405).end();
