@@ -6,25 +6,18 @@ export default async function handler(req, res) {
 
   const db = sb();
 
-  // POST — تسجيل زيارة (newVisitor: true إذا كان شخص جديد)
+  // POST — تسجيل زيارة
   if (req.method === 'POST') {
     const { newVisitor } = req.body || {};
 
-    const keys = ['visit_count'];
-    if (newVisitor) keys.push('visitor_count');
+    // زيادة الزيارات atomically
+    await db.rpc('increment_setting', { setting_key: 'visit_count' });
 
-    const { data: rows } = await db.from('settings').select('key,value').in('key', keys);
-    const map = {};
-    (rows || []).forEach(r => map[r.key] = parseInt(r.value || '0', 10));
-
-    const upserts = [
-      { key: 'visit_count',   value: String((map['visit_count']   || 0) + 1) },
-    ];
+    // زيادة الزوار الفريدين إذا كان شخص جديد
     if (newVisitor) {
-      upserts.push({ key: 'visitor_count', value: String((map['visitor_count'] || 0) + 1) });
+      await db.rpc('increment_setting', { setting_key: 'visitor_count' });
     }
 
-    await db.from('settings').upsert(upserts);
     return res.status(200).json({ ok: true });
   }
 
